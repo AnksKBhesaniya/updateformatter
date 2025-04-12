@@ -45,7 +45,6 @@
 
 'use client'
 import React, { useState } from 'react';
-import inlineStyleToClassName from '../../utils/inlineStyleToClassName';
 
 function InlineToClassConverter() {
     const [scssContent, setScssContent] = useState('');
