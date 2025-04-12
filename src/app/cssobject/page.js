@@ -1,5 +1,4 @@
 import React from 'react';
-import cssToObject from 'css-to-object';
 
 function Page() {
     // Static CSS content (paste your full CSS file content here)

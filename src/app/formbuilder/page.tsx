@@ -1,40 +1,85 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useRef, forwardRef } from 'react';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
-const DragItem = ({ type, label }: any) => {
+type FieldType = 'text' | 'textarea' | 'dropdown' | 'contact';
+
+interface DragItemProps {
+  type: FieldType;
+  label: string;
+}
+
+interface DropZoneProps {
+  onDrop: (item: DragItemProps) => void;
+  children: React.ReactNode;
+}
+
+interface FormField extends DragItemProps {
+  id: number;
+  field: string;
+}
+
+const DragItem: React.FC<DragItemProps> = ({ type, label }) => {
   const [{ isDragging }, drag] = useDrag(() => ({
     type: 'field',
     item: { type, label },
-    collect: (monitor: any) => ({
+    collect: (monitor) => ({
       isDragging: !!monitor.isDragging(),
     }),
   }));
+
+  const dragRef = useRef<HTMLDivElement>(null);
+  drag(dragRef);
+
   return (
-    <div ref={drag as any} className="p-2 m-2 border rounded bg-gray-100 cursor-move">
+    <div
+      ref={dragRef}
+      className={`p-2 m-2 border rounded bg-gray-100 cursor-move ${isDragging ? 'opacity-50' : ''}`}
+    >
       {label}
     </div>
   );
 };
 
-const DropZone = ({ onDrop, children }: any) => {
-  const [, drop] = useDrop(() => ({
+// Use forwardRef to forward the ref correctly to the DropZone component
+const DropZone: React.FC<DropZoneProps> = forwardRef<HTMLDivElement, DropZoneProps>(({ onDrop, children }, ref) => {
+  const [, drop] = useDrop<DragItemProps, void, unknown>({
     accept: 'field',
-    drop: (item) => onDrop(item),
-  }));
+    drop: (item, monitor) => {
+      if (monitor.didDrop()) return;
+      onDrop(item);
+    },
+  });
+
   return (
-    <div ref={drop as any} className="min-h-[300px] p-4 border-dashed border-2 border-gray-400 rounded">
+    <div ref={(node) => {
+      drop(node);
+      if (typeof ref === 'function') {
+        ref(node); // if ref is a function, call it
+      } else if (ref) {
+        ref.current = node; // if ref is an object, assign it directly
+      }
+    }} className="min-h-[300px] p-4 border-dashed border-2 border-gray-400 rounded">
       {children}
     </div>
   );
-};
+});
 
-const DynamicFormBuilder = () => {
-  const [fields, setFields] = useState<any[]>([]);
+DropZone.displayName = 'DropZone'; // Display name for debugging purposes
 
-  const handleDrop = (item: any) => {
-    setFields([...fields, { ...item, id: fields.length, field: `field${fields.length + 1}` }]);
+const DynamicFormBuilder: React.FC = () => {
+  const [fields, setFields] = useState<FormField[]>([]);
+
+  const handleDrop = (item: DragItemProps) => {
+    setFields((prev) => [
+      ...prev,
+      {
+        ...item,
+        id: prev.length,
+        field: `field${prev.length + 1}`,
+      },
+    ]);
   };
 
   const handleSave = () => {
@@ -86,8 +131,8 @@ const DynamicFormBuilder = () => {
         <div className="w-3/4">
           <h2 className="font-bold">Form Preview</h2>
           <DropZone onDrop={handleDrop}>
-            {fields.map((field: any) => (
-              <div  className="p-2 m-2 border rounded">
+            {fields.map((field) => (
+              <div key={field.id} className="p-2 m-2 border rounded">
                 <label>{field.label}</label>
                 {field.type === 'text' && <input type="text" className="border p-1 w-full" />}
                 {field.type === 'textarea' && <textarea className="border p-1 w-full" />}
