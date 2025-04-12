@@ -4,7 +4,7 @@ const Accordion = ({ children }) => (
   <div className="border rounded-md divide-y divide-gray-200 bg-white shadow-sm">{children}</div>
 );
 
-const AccordionItem = ({ value, children }) => (
+const AccordionItem = ({  children }) => (
   <div className="p-4">{children}</div>
 );
 
