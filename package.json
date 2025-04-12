@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "css-to-object": "^1.1.0",
+    "lucide-react": "^0.487.0",
     "next": "15.1.7",
     "react": "^19.0.0",
     "react-dnd": "^16.0.1",
